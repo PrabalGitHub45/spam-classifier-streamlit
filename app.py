@@ -13,17 +13,11 @@ if not os.path.exists(nltk_data_dir):
     os.makedirs(nltk_data_dir)
 
 # Download resources only if not already available
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', download_dir=nltk_data_dir)
-
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords', download_dir=nltk_data_dir)
+nltk.download('punkt_tab', download_dir=nltk_data_dir)
+nltk.download('stopwords', download_dir=nltk_data_dir)
 
 nltk.data.path.append(nltk_data_dir)
+
 
 # Text preprocessing
 def transform_text(text):
