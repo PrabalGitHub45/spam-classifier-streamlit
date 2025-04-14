@@ -6,27 +6,45 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import os
 
-# Styling the page
-st.set_page_config(page_title="SMS Spam Classifier", page_icon="📩", layout="centered")
-
-# Download NLTK resources
+# Setup for nltk
 ps = PorterStemmer()
 nltk_data_dir = os.path.join(os.getcwd(), 'nltk_data')
 if not os.path.exists(nltk_data_dir):
     os.makedirs(nltk_data_dir)
 
-nltk.download('punkt_tab', download_dir=nltk_data_dir)
-nltk.download('stopwords', download_dir=nltk_data_dir)
+# Download resources only if not already available
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir=nltk_data_dir)
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir=nltk_data_dir)
+
 nltk.data.path.append(nltk_data_dir)
 
-# Preprocessing function
+# Text preprocessing
 def transform_text(text):
     text = text.lower()
     text = nltk.word_tokenize(text)
 
-    y = [i for i in text if i.isalnum()]
-    y = [i for i in y if i not in stopwords.words('english') and i not in string.punctuation]
-    y = [ps.stem(i) for i in y]
+    y = []
+    for i in text:
+        if i.isalnum():
+            y.append(i)
+
+    text = y[:]
+    y.clear()
+    for i in text:
+        if i not in stopwords.words('english') and i not in string.punctuation:
+            y.append(i)
+
+    text = y[:]
+    y.clear()
+    for i in text:
+        y.append(ps.stem(i))
 
     return " ".join(y)
 
@@ -34,23 +52,35 @@ def transform_text(text):
 tfidf = pickle.load(open('vectorizer1.pkl', 'rb'))
 mnb = pickle.load(open('model1.pkl', 'rb'))
 
-# App UI design
-st.markdown("<h1 style='text-align: center; color: #4B8BBE;'>📨 Email/SMS Spam Classifier</h1>", unsafe_allow_html=True)
-st.markdown("#### Paste any message below to check if it's **SPAM** or **NOT SPAM** 👇")
+# ----------------------- Streamlit UI -----------------------
+st.set_page_config(page_title="Spam Classifier", layout="centered")
+st.markdown(
+    """
+    <h2 style='text-align: center; color: #6c63ff;'>📩 SMS Spam Classifier</h2>
+    """,
+    unsafe_allow_html=True
+)
 
-input_sms = st.text_area("🔤 Enter the message here:", height=150)
+with st.form("spam_form"):
+    input_sms = st.text_area("Enter the message", height=150)
+    submitted = st.form_submit_button("Predict")
 
-# Button and result display
-if st.button('🚀 Predict', use_container_width=True):
+if submitted:
     transformed_sms = transform_text(input_sms)
     vector_input = tfidf.transform([transformed_sms])
     result = mnb.predict(vector_input)[0]
 
     if result == 1:
-        st.error("🚫 This message is classified as **SPAM**.")
+        st.markdown(
+            "<div style='background-color:#ffcccc; padding:20px; border-radius:10px;'>"
+            "<h3 style='color:red;'>🚨 This is Spam!</h3>"
+            "</div>",
+            unsafe_allow_html=True
+        )
     else:
-        st.success("✅ This message is classified as **NOT SPAM**.")
-
-# Footer
-st.markdown("---")
-st.markdown("<p style='text-align:center;'>Made with 💻 by <b>Prabal</b></p>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='background-color:#ccffcc; padding:20px; border-radius:10px;'>"
+            "<h3 style='color:green;'>✅ This is Not Spam!</h3>"
+            "</div>",
+            unsafe_allow_html=True
+        )
