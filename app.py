@@ -80,4 +80,4 @@ if submitted:
         )
 
 st.markdown("<hr style='margin-top: 50px;'>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: grey;'>💻 Made with Prabal</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: grey;'>💻 Made with ❤ by Prabal</p>", unsafe_allow_html=True)
